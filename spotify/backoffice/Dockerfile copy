@@ -5,6 +5,6 @@ ENV CHOKIDAR_USEPOLLING=true \
     WATCHPACK_POLLING=true   
 
 WORKDIR /app
-COPY ./spotify/clone .
+COPY . .
 RUN npm ci
 CMD ["npm", "run", "dev"]
