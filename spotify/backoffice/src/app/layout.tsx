@@ -1,14 +1,5 @@
-import type React from "react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import "@radix-ui/themes/styles.css";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "BackOffice",
-  description: "Área administrativa",
-};
 
 export default function RootLayout({
   children,
@@ -17,7 +8,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

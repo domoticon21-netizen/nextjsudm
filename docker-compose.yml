@@ -1,12 +1,12 @@
 services:
-  web:
-    container_name: spotify
-    image: acpnext
-    build: .
-    ports:
-      - 3000:3000
-    volumes:
-      - ./spotify/clone/:/app
+  #web:
+  #container_name: spotify
+  #image: acpnext
+  #build: .
+  #ports:
+  #  - 3000:3000
+  #volumes:
+  #  - ./spotify/clone/:/app
 
   back:
     container_name: boffice
