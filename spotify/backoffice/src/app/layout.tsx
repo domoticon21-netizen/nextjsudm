@@ -1,4 +1,5 @@
 import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
 import "./globals.css";
 
 export default function RootLayout({
@@ -8,7 +9,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body>{children}</body>
+      
+      <body><Theme>{children}</Theme></body>
+      
     </html>
   );
 }
