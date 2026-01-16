@@ -9,9 +9,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      
-      <body><Theme>{children}</Theme></body>
-      
+      <body className="text-blue-900">        
+        <Theme>{children}</Theme>
+      </body>
     </html>
   );
 }

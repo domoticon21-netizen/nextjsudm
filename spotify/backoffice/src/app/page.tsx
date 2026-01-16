@@ -1,10 +1,7 @@
-import Header from "./components/Header/Header";
-
 export default function Boffice() {
   return (
     <>
-      <Header />
-      <h1>área backoffice 5</h1>
+      <h1 className="border-4 border-amber-400">área backoffice 5</h1>
     </>
   );
 }
