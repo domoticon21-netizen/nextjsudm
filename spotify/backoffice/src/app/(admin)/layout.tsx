@@ -7,8 +7,8 @@ interface props {
 
 export default function layout({ children }: props) {
   return(
-  <div className="border-4 border-blue-500 mt-2">
-    <Header />
+  <div>
+    <Header />    
     {children}
   </div>
   )
