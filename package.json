@@ -3,6 +3,9 @@
     "@radix-ui/themes": "^3.2.1"
   },
   "devDependencies": {
-    "prettier": "3.8.0"
+    "@types/node": "^25.0.10",
+    "@types/pg": "^8.16.0",
+    "prettier": "3.8.0",
+    "prisma": "^6.19.2"
   }
 }
