@@ -16,3 +16,5 @@ spotify/backoffice/next-env.d.ts
 spotify/clone/next-env.d.ts
 
 dados
+
+/generated/prisma
