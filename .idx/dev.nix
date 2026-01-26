@@ -8,6 +8,7 @@
     pkgs.nodejs_20    
     pkgs.nodePackages.pnpm   
     pkgs.docker-compose    
+    pkgs.mount
   ];
   # Sets environment variables in the workspace
   env = {};
