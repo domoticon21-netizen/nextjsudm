@@ -10,6 +10,8 @@ services:
     volumes:
       - ./spotify/clone/:/app
       - /app/node_modules
+    networks:
+      - sptfnetwork
 
   banco:
     image: postgres:18-alpine3.23
@@ -20,6 +22,8 @@ services:
       - "5432:5432"
     volumes:
       - ./dados/:/var/lib/postgresql
+    networks:
+      - sptfnetwork
 
   back:
     container_name: boffice
@@ -32,3 +36,10 @@ services:
     volumes:
       - ./spotify/backoffice/:/app
       - /app/node_modules
+    networks:
+      - sptfnetwork
+      
+networks:
+  sptfnetwork:
+    name: sptfnetwork
+    driver: bridge

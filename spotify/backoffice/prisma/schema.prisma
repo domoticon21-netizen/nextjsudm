@@ -7,7 +7,30 @@ datasource db {
   provider = "postgresql"
 }
 
-model bands {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String @db.VarChar
+model Band {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  slug      String   @unique
+  status    Status   @default(active)
+  createdAt DateTime @default(now()) @map("created_at")
+  updateAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("bands")
+}
+
+model Track {
+  id                String   @id @default(uuid()) @db.Uuid
+  title             String
+  description       String?
+  slug              String   @unique
+  durationInSeconds Int      @map("duration_in_seconds")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updateAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("tracks")
+}
+
+enum Status {
+  active
+  inactive
 }
