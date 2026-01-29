@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -13,7 +13,9 @@ model Band {
   slug      String   @unique
   status    Status   @default(active)
   createdAt DateTime @default(now()) @map("created_at")
-  updateAt  DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tracks Track[] @relation("BandTracks")
 
   @@map("bands")
 }
@@ -25,8 +27,12 @@ model Track {
   slug              String   @unique
   durationInSeconds Int      @map("duration_in_seconds")
   createdAt         DateTime @default(now()) @map("created_at")
-  updateAt          DateTime @updatedAt @map("updated_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
+  bandId String @db.Uuid
+  band   Band   @relation("BandTracks", fields: [bandId], references: [id], onDelete: Cascade)
+
+  @@index([bandId])
   @@map("tracks")
 }
 
