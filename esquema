@@ -1,12 +1,3 @@
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 model Band {
   id        String   @id @default(uuid()) @db.Uuid
   name      String   @unique
@@ -14,7 +5,8 @@ model Band {
   status    Status   @default(active)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  tracks    Track[]  @relation("BandTracks")
+
+  tracks Track[] @relation("BandTracks")
 
   @@map("bands")
 }
@@ -27,8 +19,9 @@ model Track {
   durationInSeconds Int      @map("duration_in_seconds")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
-  bandId            String   @db.Uuid
-  band              Band     @relation("BandTracks", fields: [bandId], references: [id], onDelete: Cascade)
+
+  bandId String @db.Uuid
+  band   Band   @relation("BandTracks", fields: [bandId], references: [id], onDelete: Cascade)
 
   @@index([bandId])
   @@map("tracks")
