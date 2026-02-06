@@ -11,6 +11,7 @@ model Band {
   id        String   @id @default(uuid()) @db.Uuid
   name      String   @unique
   slug      String   @unique
+  description       String?
   status    Status   @default(active)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -21,8 +22,7 @@ model Band {
 
 model Track {
   id                String   @id @default(uuid()) @db.Uuid
-  title             String
-  description       String?
+  title             String  
   slug              String   @unique
   durationInSeconds Int      @map("duration_in_seconds")
   createdAt         DateTime @default(now()) @map("created_at")
