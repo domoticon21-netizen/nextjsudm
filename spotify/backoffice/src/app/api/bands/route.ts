@@ -1,44 +1,141 @@
 import { NextResponse } from "next/server";
-import { prisma } from '../../../../lib/prisma'
+import { prisma } from "../../../../lib/prisma";
 import * as z from "zod";
+//import { da } from "zod/v4/locales";
 //import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 //import path from "path";
 //import { mkdir, writeFile } from "fs/promises";
 
- const bandSchemma = z.object({ 
-   name: z.string().min(1),
-   slug: z.string().min(1),
-   description: z.string().optional(),
-   status: z.enum(["active", "inactive"])
-  });
+const bandSchemma = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().optional(),
+  status: z.enum(["active", "inactive"]),
+});
+
+const bandArray = z.array(bandSchemma).min(1);
 
 // GET
 export async function GET() {
-  const dados = await prisma.band.findMany();  
+  const dados = await prisma.band.findMany();
   return NextResponse.json(dados);
 }
 
 export async function POST(request: Request) {
-  const bodyText = await request.text();
-  const params = new URLSearchParams(bodyText)
-  const name = params.get("name");
-  const slug = params.get("slug");
-  const description = params.get("description");
-  const status = params.get("status"); 
+  try {
+    // ===== PARSE JSON =====
+    let data: unknown;
 
-  const validate = bandSchemma.parse({
-    
-  });
+    try {
+      data = await request.json();
+    } catch {
+      return NextResponse.json(
+        { erro: "JSON inválido ou mal formatado" },
+        { status: 400 },
+      );
+    }
 
-  return NextResponse.json(
-    {
-      name: name,
-      slug: slug,
-      description: description,
-      status: status
-    })
+    // ===== BLOQUEAR VAZIO =====
+    if (
+      data === null ||
+      data === undefined ||
+      (typeof data === "object" &&
+        !Array.isArray(data) &&
+        Object.keys(data).length === 0)
+    ) {
+      return NextResponse.json({ erro: "Dados em branco" }, { status: 400 });
+    }
+
+    // ===== ARRAY =====
+    if (Array.isArray(data)) {
+      const parsed = bandArray.safeParse(data);
+
+      if (!parsed.success) {
+        return NextResponse.json(
+          {
+            erro: "Erro de validação",
+            detalhes: parsed.error.format(),
+          },
+          { status: 400 },
+        );
+      }
+
+      return NextResponse.json({
+        msg: "array válido",
+        data: parsed.data,
+      });
+    }
+
+    // ===== OBJETO =====
+    if (typeof data === "object") {
+      const parsed = bandSchemma.safeParse(data);
+
+      if (!parsed.success) {
+        return NextResponse.json(
+          {
+            erro: "Erro de validação",
+            detalhes: parsed.error.format(),
+          },
+          { status: 400 },
+        );
+      }
+
+      return NextResponse.json({
+        msg: "objeto válido",
+        data: parsed.data,
+      });
+    }
+
+    // ===== FORMATO INVÁLIDO =====
+    return NextResponse.json({ erro: "Formato inválido" }, { status: 400 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { erro: "Erro interno do servidor" },
+      { status: 500 },
+    );
+  }
 }
 
+//x-www-form-urlencoded
+// export async function POST(request: Request) {
+//   try {
+//     // body → urlencoded
+//     const params = new URLSearchParams(await request.text());
+
+//     const data = {
+//       name: params.get("name"),
+//       slug: params.get("slug"),
+//       description: params.get("description"),
+//       status: params.get("status"),
+//     };
+
+//     // validação sem throw
+//     const parsed = bandSchemma.safeParse(data);
+
+//     if (!parsed.success) {
+//       return NextResponse.json(
+//         {
+//           msg: "Erro de validação",
+//           errors: parsed.error.format(),
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     return NextResponse.json({
+//       data: parsed.data,
+//     });
+//   } catch (error) {
+//     console.error(error);
+
+//     return NextResponse.json(
+//       { msg: "Erro interno" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 // POST formdata
 /*
