@@ -1,102 +1,96 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import * as z from "zod";
+import path from "path";
+import { mkdir, writeFile } from "fs/promises";
+
 //import { da } from "zod/v4/locales";
 //import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
-//import path from "path";
-//import { mkdir, writeFile } from "fs/promises";
+import { bandSchemma } from "@/app/schemas/band.schema";
 
-const bandSchemma = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  description: z.string().optional(),
-  status: z.enum(["active", "inactive"]),
-});
+GET;
 
-const bandArray = z.array(bandSchemma).min(1);
-
-// GET
 export async function GET() {
   const dados = await prisma.band.findMany();
   return NextResponse.json(dados);
 }
 
-export async function POST(request: Request) {
-  try {
-    // ===== PARSE JSON =====
-    let data: unknown;
+// export async function POST(request: Request) {
+//   try {
+//     // ===== PARSE JSON =====
+//     let data: unknown;
 
-    try {
-      data = await request.json();
-    } catch {
-      return NextResponse.json(
-        { erro: "JSON inválido ou mal formatado" },
-        { status: 400 },
-      );
-    }
+//     try {
+//       data = await request.json();
+//     } catch {
+//       return NextResponse.json(
+//         { erro: "JSON inválido ou mal formatado" },
+//         { status: 400 },
+//       );
+//     }
 
-    // ===== BLOQUEAR VAZIO =====
-    if (
-      data === null ||
-      data === undefined ||
-      (typeof data === "object" &&
-        !Array.isArray(data) &&
-        Object.keys(data).length === 0)
-    ) {
-      return NextResponse.json({ erro: "Dados em branco" }, { status: 400 });
-    }
+//     // ===== BLOQUEAR VAZIO =====
+//     if (
+//       data === null ||
+//       data === undefined ||
+//       (typeof data === "object" &&
+//         !Array.isArray(data) &&
+//         Object.keys(data).length === 0)
+//     ) {
+//       return NextResponse.json({ erro: "Dados em branco" }, { status: 400 });
+//     }
 
-    // ===== ARRAY =====
-    if (Array.isArray(data)) {
-      const parsed = bandArray.safeParse(data);
+//     // ===== ARRAY =====
+//     if (Array.isArray(data)) {
+//       const parsed = bandArray.safeParse(data);
 
-      if (!parsed.success) {
-        return NextResponse.json(
-          {
-            erro: "Erro de validação",
-            detalhes: parsed.error.format(),
-          },
-          { status: 400 },
-        );
-      }
+//       if (!parsed.success) {
+//         return NextResponse.json(
+//           {
+//             erro: "Erro de validação",
+//             detalhes: parsed.error.format(),
+//           },
+//           { status: 400 },
+//         );
+//       }
 
-      return NextResponse.json({
-        msg: "array válido",
-        data: parsed.data,
-      });
-    }
+//       return NextResponse.json({
+//         msg: "array válido",
+//         data: parsed.data,
+//       });
+//     }
 
-    // ===== OBJETO =====
-    if (typeof data === "object") {
-      const parsed = bandSchemma.safeParse(data);
+//     // ===== OBJETO =====
+//     if (typeof data === "object") {
+//       const parsed = bandSchemma.safeParse(data);
 
-      if (!parsed.success) {
-        return NextResponse.json(
-          {
-            erro: "Erro de validação",
-            detalhes: parsed.error.format(),
-          },
-          { status: 400 },
-        );
-      }
+//       if (!parsed.success) {
+//         return NextResponse.json(
+//           {
+//             erro: "Erro de validação",
+//             detalhes: parsed.error.format(),
+//           },
+//           { status: 400 },
+//         );
+//       }
 
-      return NextResponse.json({
-        msg: "objeto válido",
-        data: parsed.data,
-      });
-    }
+//       return NextResponse.json({
+//         msg: "objeto válido",
+//         data: parsed.data,
+//       });
+//     }
 
-    // ===== FORMATO INVÁLIDO =====
-    return NextResponse.json({ erro: "Formato inválido" }, { status: 400 });
-  } catch (error) {
-    console.error(error);
+//     // ===== FORMATO INVÁLIDO =====
+//     return NextResponse.json({ erro: "Formato inválido" }, { status: 400 });
+//   } catch (error) {
+//     console.error(error);
 
-    return NextResponse.json(
-      { erro: "Erro interno do servidor" },
-      { status: 500 },
-    );
-  }
-}
+//     return NextResponse.json(
+//       { erro: "Erro interno do servidor" },
+//       { status: 500 },
+//     );
+//   }
+// }
 
 //x-www-form-urlencoded
 // export async function POST(request: Request) {
@@ -138,34 +132,109 @@ export async function POST(request: Request) {
 // }
 
 // POST formdata
-/*
+
 export async function POST(request: Request) {
-  const data = await request.formData();  
+  try {
+    const data = await request.formData();
 
-  const file = data.get("cover");
+    if (!data || data.entries().next().done) {
+      return NextResponse.json(
+        { erro: "FormData vazio" },
+        { status: 400 }
+      );
+    }
 
-   if (!(file instanceof File)) {
-     return NextResponse.json(
-       { erro: "não é uma imagem" },
-       { status: 400 }
-     );
-   }
-  
-   const arbufer = await file.arrayBuffer()
-   const bufer = Buffer.from(arbufer);
+    // ===== arquivo =====
+    const file = data.get("cover");
 
-   const upload_dir = path.join(process.cwd(), "public", "upload");
-   await mkdir(upload_dir, { recursive:true });
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { erro: "Arquivo inválido ou não enviado" },
+        { status: 400 }
+      );
+    }
 
-   const filePath = path.join(upload_dir, file.name);
-   await writeFile(filePath, bufer);
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        { erro: "Somente imagens permitidas" },
+        { status: 400 }
+      );
+    }
 
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { erro: "Máx 5MB" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({
-    received: `upload/${file.name}` ,
-  });
+    // ===== texto =====
+    const body = {
+      name: String(data.get("name") ?? ""),
+      slug: String(data.get("slug") ?? ""),
+      description: data.get("description")
+        ? String(data.get("description"))
+        : undefined,
+      status: String(data.get("status") ?? ""),
+    };
+
+    const validated = bandSchemma.parse(body);
+
+    // ===== salvar arquivo =====
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const uploadDir = path.join(
+      process.cwd(),
+      "public/upload"
+    );
+
+    await mkdir(uploadDir, { recursive: true });
+
+    // nome único
+    const fileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, "_")}`;
+
+    const filePath = path.join(uploadDir, fileName);
+
+    await writeFile(filePath, buffer);
+
+    const coverPath = `upload/${fileName}`;
+
+    // ===== salvar no banco =====
+    const band = await prisma.band.create({
+      data: {
+        name: validated.name,
+        slug: validated.slug,
+        description: validated.description,
+        status: validated.status as any,
+        cover: coverPath,
+      },
+    });
+
+    return NextResponse.json({
+      msg: "Banda criada",
+      band,
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          erro: "Erro de validação",
+          detalhes: error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    console.error(error);
+
+    return NextResponse.json(
+      { erro: "Erro interno" },
+      { status: 500 }
+    );
+  }
 }
-*/
+
 // PUT
 export async function PUT(request: Request) {
   const body = await request.json();
