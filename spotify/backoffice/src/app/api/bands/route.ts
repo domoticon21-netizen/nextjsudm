@@ -3,17 +3,83 @@ import { prisma } from "../../../../lib/prisma";
 import * as z from "zod";
 import path from "path";
 import { mkdir, writeFile } from "fs/promises";
-
-//import { da } from "zod/v4/locales";
-//import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { bandSchemma } from "@/app/schemas/band.schema";
 
-GET;
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
 
-export async function GET() {
-  const dados = await prisma.band.findMany();
-  return NextResponse.json(dados);
+    const pageParam = Number(searchParams.get("page") ?? 1);
+    const currentPage = !pageParam || pageParam < 1 ? 1 : pageParam;
+
+    const take = 4;
+
+    const bandTotal = await prisma.band.count();
+    const pageTotal = bandTotal === 0 ? 1 : Math.ceil(bandTotal / take);
+
+    const safePage = currentPage > pageTotal ? pageTotal : currentPage;
+
+    const skip = (safePage - 1) * take;
+
+    console.log({
+      bandTotal,
+      pageTotal,
+      safePage,
+      skip,
+      take,
+    });
+
+    /* 🔥 TESTE SEM ORDERBY PRIMEIRO */
+    const dados = await prisma.band.findMany({
+      skip,
+      take,
+    });
+
+    return NextResponse.json({
+      data: dados,
+      pagination: {
+        currentPage: safePage,
+        bandTotal,
+        pageTotal,
+        take,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Erro ao buscar bandas" },
+      { status: 500 },
+    );
+  }
 }
+
+// import { NextResponse } from "next/server";
+// import { prisma } from "../../../../lib/prisma";
+// import * as z from "zod";
+// import path from "path";
+// import { mkdir, writeFile } from "fs/promises";
+
+// //import { da } from "zod/v4/locales";
+// //import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
+// import { bandSchemma } from "@/app/schemas/band.schema";
+
+// //GET;
+
+// const bandTotal = await prisma.band.count();
+// const currentPage: number = 2;
+// const take: number = 4;
+// const skip: number = (currentPage - 1) * take;
+// const pageTotal: number = Math.ceil(bandTotal / take);
+
+// export async function GET() {
+//   const dados = await prisma.band.findMany({
+//     skip,
+//     take,
+//     orderBy: { createdAt: "desc" },
+//   });
+//   return NextResponse.json({ data: dados, pagination:{currentPage, bandTotal, pageTotal} });
+// }
 
 // export async function POST(request: Request) {
 //   try {
@@ -138,10 +204,7 @@ export async function POST(request: Request) {
     const data = await request.formData();
 
     if (!data || data.entries().next().done) {
-      return NextResponse.json(
-        { erro: "FormData vazio" },
-        { status: 400 }
-      );
+      return NextResponse.json({ erro: "FormData vazio" }, { status: 400 });
     }
 
     // ===== arquivo =====
@@ -150,22 +213,19 @@ export async function POST(request: Request) {
     if (!(file instanceof File)) {
       return NextResponse.json(
         { erro: "Arquivo inválido ou não enviado" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { erro: "Somente imagens permitidas" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { erro: "Máx 5MB" },
-        { status: 400 }
-      );
+      return NextResponse.json({ erro: "Máx 5MB" }, { status: 400 });
     }
 
     // ===== texto =====
@@ -183,10 +243,7 @@ export async function POST(request: Request) {
     // ===== salvar arquivo =====
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const uploadDir = path.join(
-      process.cwd(),
-      "public/upload"
-    );
+    const uploadDir = path.join(process.cwd(), "public/upload");
 
     await mkdir(uploadDir, { recursive: true });
 
@@ -214,7 +271,6 @@ export async function POST(request: Request) {
       msg: "Banda criada",
       band,
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -222,16 +278,13 @@ export async function POST(request: Request) {
           erro: "Erro de validação",
           detalhes: error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error(error);
 
-    return NextResponse.json(
-      { erro: "Erro interno" },
-      { status: 500 }
-    );
+    return NextResponse.json({ erro: "Erro interno" }, { status: 500 });
   }
 }
 
